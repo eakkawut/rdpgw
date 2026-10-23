@@ -158,12 +158,14 @@ func main() {
 		}
 
 		if conf.Server.KeyFile != "" && conf.Server.CertFile != "" {
-			cert, err := tls.LoadX509KeyPair(conf.Server.CertFile, conf.Server.KeyFile)
+			// reloads the files when they change, so a renewed certificate needs no restart
+			certs, err := newCertReloader(conf.Server.CertFile, conf.Server.KeyFile)
 			if err != nil {
 				log.Printf("Cannot load certfile or keyfile (%s) falling back to acme", err)
+			} else {
+				cfg.GetCertificate = certs.GetCertificate
+				tlsConfigured = true
 			}
-			cfg.Certificates = append(cfg.Certificates, cert)
-			tlsConfigured = true
 		}
 
 		if !tlsConfigured {
