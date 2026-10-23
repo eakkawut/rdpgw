@@ -332,9 +332,14 @@ func main() {
 	}
 
 	// setup server
+	var handler http.Handler = r
+	if os.Getenv("RDPGW_LOG_REQUESTS") != "" {
+		log.Printf("Logging every request (RDPGW_LOG_REQUESTS is set)")
+		handler = logRequests(r)
+	}
 	server := http.Server{
 		Addr:         listenAddress(conf.Server.BindAddress, conf.Server.Port),
-		Handler:      r,
+		Handler:      handler,
 		TLSConfig:    cfg,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)), // disable http2
 	}
